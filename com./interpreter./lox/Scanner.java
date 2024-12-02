@@ -8,6 +8,28 @@ class Scanner{
     private int start = 0;
     private int current = 0;
     private int line = 0;
+    private final static Map<String, TokenType> keywords;
+
+    static{
+        keywords = new HashMap<>();
+        keywords.put("and", AND);
+        keywords.put("or", OR);
+        keywords.put("fun", FUN);
+        keywords.put("class", CLASS);
+        keywords.put("for", FOR);
+        keywords.put("while", WHILE);
+        keywords.put("for", FOR);
+        keywords.put("if", IF);
+        keywords.put("nil", NIL);
+        keywords.put("else", ELSE);
+        keywords.put("super", SUPER);
+        keywords.put("true", TRUE);
+        keywords.put("false", FALSE);
+        keywords.put("or", OR);
+        keywords.put("print", PRINT);
+        keywords.put("this", THIS);
+        keywords.put("var", VAR);
+    }
 
     Scanner(String source){
         this.source = source;
@@ -67,8 +89,18 @@ class Scanner{
             case '"':
                 string();
                 break;
+            case 'o':
+                if(peek()=='r'){
+                    addToken(OR);
+                }
+                break;
             default:
-                Lox.error(line, "Unexpected character.");
+                if(isDigit(c)){
+                    number();
+                }else if(isAlpha(c)){
+                    identifier();
+                }else{
+                Lox.error(line, "Unexpected character.");}
                 break;
         }
     }
@@ -121,4 +153,44 @@ class Scanner{
         String value = source.substring(start+1, current-1);
         addToken(STRING, value);
     }
+
+    private boolean isDigit(char c){
+        return c>='0' && c<='9';
+    }
+
+    private void number(){
+        while(isDigit(peek())) advance();
+
+        if(peek()=='.' && isDigit(peekNext())){
+            advance();
+            while(isDigit(peek())) advance();
+        }
+
+        addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
+    }
+
+    private char peekNext(){
+        if(current+1>=source.length()) return '\0';
+        return source.charAt(current+1);
+    }
+
+    private boolean isAlpha(char c){
+        return (c>='a' && c<='z') || (c == '_') || (c>='A' && c<='Z'); 
+    }
+
+    private void identifier(){
+        while(isAlphaNumeric(peek())) advance();
+
+        String text = source.substring(start,current);
+        TokenType type = keywords.get(text);
+        if(type==null) type = IDENTIFIER;
+        addToken(type);
+    }
+
+    private boolean isAlphaNumeric(char c){
+        return isAlpha(c) || isDigit(c);
+    }
+
+
+
 }
