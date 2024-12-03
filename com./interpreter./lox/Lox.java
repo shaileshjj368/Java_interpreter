@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Scanner;
 
+import javax.swing.text.html.parser.Parser;
+
 public class Lox{
     static boolean hadError = false;
     public static void main(String args[]) throws IOException{
@@ -46,9 +48,12 @@ public class Lox{
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
-        for(Token token: tokens){
-            System.out.println(token);
-        }
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+
+        if(hadError()) return;
+
+        System.out.println(new AstPrinter().print(expression));
     }
 
     static void error(int line, String message){
@@ -58,5 +63,13 @@ public class Lox{
     private static void report(int line,String where, String message){
         System.err.println("[line "+line+"] Error"+ where+ ": "+message);
         hadError = true;
+    }
+
+    static void error(Token token, String msg){
+        if(token.type ==TokenType.EOF){
+            report(token.line, " at end " , msg);
+        }else{
+            report(token.line, " '" + token.lexeme + "' ", msg);
+        }
     }
 }
